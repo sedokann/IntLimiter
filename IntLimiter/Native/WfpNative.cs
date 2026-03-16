@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace IntLimiter.Native;
@@ -59,10 +60,15 @@ public static class WfpNative
                 subLayerKey = subLayerGuid,
                 weight = 0x100
             };
-            FwpmSubLayerAdd0(engine, ref sl, IntPtr.Zero);
-            // Ignore error if already exists (0x80320009)
+            uint hr = FwpmSubLayerAdd0(engine, ref sl, IntPtr.Zero);
+            // 0x80320009 = FWP_E_ALREADY_EXISTS — expected on second run, safe to ignore.
+            if (hr != 0 && hr != 0x80320009)
+                Debug.WriteLine($"WFP FwpmSubLayerAdd0 returned 0x{hr:X8}");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"WFP EnsureSubLayer unexpected error: {ex.Message}");
+        }
     }
 }
 #endif

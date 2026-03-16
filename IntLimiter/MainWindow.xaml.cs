@@ -33,8 +33,7 @@ public partial class MainWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.Dispose();
-        Close();
+        Close(); // triggers OnClosed, which calls _viewModel.Dispose()
     }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
@@ -68,6 +67,7 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(System.EventArgs e)
     {
+        // CloseButton_Click already calls Dispose; OnClosed covers Alt-F4 / OS close paths.
         _viewModel.Dispose();
         base.OnClosed(e);
     }

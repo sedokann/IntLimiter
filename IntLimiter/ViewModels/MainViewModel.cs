@@ -12,6 +12,7 @@ namespace IntLimiter.ViewModels;
 
 public partial class MainViewModel : ObservableObject, IDisposable
 {
+    private const double MbpsToBps = 1_000_000.0;
     private readonly NetworkMonitorService _monitorService;
     private readonly BandwidthLimiterService _limiterService;
     private readonly Dispatcher _dispatcher;
@@ -114,8 +115,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void ApplyGlobalLimit()
     {
         _limiterService.SetGlobalLimit(
-            GlobalMaxUploadMbps * 1_000_000,
-            GlobalMaxDownloadMbps * 1_000_000);
+            GlobalMaxUploadMbps * MbpsToBps,
+            GlobalMaxDownloadMbps * MbpsToBps);
     }
 
     [RelayCommand]

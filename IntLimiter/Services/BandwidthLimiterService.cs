@@ -20,7 +20,8 @@ public class BandwidthLimiterService : IDisposable
     // Active WFP filter IDs per pid
     private readonly Dictionary<int, ulong> _activeFilterIds = new();
 
-    private static readonly Guid SubLayerGuid = new("A1B2C3D4-E5F6-7890-ABCD-EF1234567890");
+    // Stable, unique GUID identifying the IntLimiter WFP sublayer across sessions.
+    private static readonly Guid SubLayerGuid = new("3F8A1C2E-74D9-4B5E-A8F0-C7D3E9210B6A");
 
     public BandwidthLimiterService()
     {
