@@ -15,6 +15,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private const double MbpsToBps = 1_000_000.0;
     private readonly NetworkMonitorService _monitorService;
     private readonly BandwidthLimiterService _limiterService;
+    private readonly IPerConnectionStats? _perConnStats;
     private readonly Dispatcher _dispatcher;
     private bool _disposed;
 
@@ -62,6 +63,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _monitorService = monitorService;
         _limiterService = limiterService;
         _dispatcher = dispatcher;
+
+        // Use the public PerConnectionStats property exposed by NetworkMonitorService.
+        _perConnStats = monitorService.PerConnectionStats;
+
         _monitorService.NetworkDataUpdated += OnNetworkDataUpdated;
         _monitorService.Start();
     }
@@ -73,6 +78,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnNetworkDataUpdated(IReadOnlyList<AppNetworkInfo> apps, NetworkStats global)
     {
+        // Apply throttling on the background thread before dispatching UI updates.
+        _limiterService.ApplyThrottling(apps, _perConnStats);
+
         _dispatcher.BeginInvoke(() =>
         {
             UpdateGlobalStats(global);

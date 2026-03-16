@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using IntLimiter.Services;
 using Xunit;
@@ -74,5 +76,93 @@ public class BandwidthLimiterServiceTests
         var svc = new BandwidthLimiterService();
         svc.Dispose();
         svc.Dispose(); // should not throw
+    }
+
+    [Fact]
+    public void ApplyThrottling_NoLimits_DoesNotCallSetCwnd()
+    {
+        // When no limits are set, ApplyThrottling should not call SetConnectionCwndLimit.
+        using var svc = new BandwidthLimiterService();
+
+        var conn = new TcpConnectionInfo(42, 0x0100007F, 12345, 0x08080808, 443, 5);
+        var app = new IntLimiter.Models.AppNetworkInfo
+        {
+            ProcessId   = 42,
+            ProcessName = "test",
+            TcpConnections = new List<TcpConnectionInfo> { conn },
+        };
+
+        int cwndSetCallCount = 0;
+        var fakeStats = new FakePerConnectionStats(
+            onSet: (_, _) => cwndSetCallCount++);
+
+        svc.ApplyThrottling(new List<IntLimiter.Models.AppNetworkInfo> { app }, fakeStats);
+
+        Assert.Equal(0, cwndSetCallCount);
+    }
+
+    [Fact]
+    public void ApplyThrottling_WithPerAppLimit_CallsSetCwnd()
+    {
+        using var svc = new BandwidthLimiterService();
+        svc.SetLimit(42, @"C:\app.exe", 1_000_000, 1_000_000); // 1 Mbps up/down
+
+        var conn = new TcpConnectionInfo(42, 0x0100007F, 12345, 0x08080808, 443, 5);
+        var app = new IntLimiter.Models.AppNetworkInfo
+        {
+            ProcessId   = 42,
+            ProcessName = "test",
+            TcpConnections = new List<TcpConnectionInfo> { conn },
+        };
+
+        uint? lastCwnd = null;
+        var fakeStats = new FakePerConnectionStats(
+            onSet: (_, cwnd) => lastCwnd = cwnd);
+
+        svc.ApplyThrottling(new List<IntLimiter.Models.AppNetworkInfo> { app }, fakeStats);
+
+        Assert.NotNull(lastCwnd);
+        // CWND should be > 0 (limit applied) and ≥ 1 MSS (1460 bytes)
+        Assert.True(lastCwnd > 0, "Expected non-zero CWND limit");
+        Assert.True(lastCwnd >= 1460, $"CWND {lastCwnd} should be at least 1 MSS (1460 bytes)");
+    }
+
+    [Fact]
+    public void ApplyThrottling_AfterRemoveLimit_ClearsCwnd()
+    {
+        using var svc = new BandwidthLimiterService();
+        svc.SetLimit(42, @"C:\app.exe", 1_000_000, 1_000_000);
+
+        var conn = new TcpConnectionInfo(42, 0x0100007F, 12345, 0x08080808, 443, 5);
+        var app = new IntLimiter.Models.AppNetworkInfo
+        {
+            ProcessId   = 42,
+            ProcessName = "test",
+            TcpConnections = new List<TcpConnectionInfo> { conn },
+        };
+
+        uint? lastCwnd = null;
+        var fakeStats = new FakePerConnectionStats(
+            onSet: (_, cwnd) => lastCwnd = cwnd);
+
+        // First call with limit active — this registers the app as throttled.
+        svc.ApplyThrottling(new List<IntLimiter.Models.AppNetworkInfo> { app }, fakeStats);
+        Assert.True((lastCwnd ?? 0) > 0, "Expected non-zero CWND on first call with limit");
+
+        // Now remove the limit and apply again.
+        svc.RemoveLimit(42);
+        lastCwnd = null;
+        svc.ApplyThrottling(new List<IntLimiter.Models.AppNetworkInfo> { app }, fakeStats);
+
+        // CWND should be cleared (set to 0) after limit was removed.
+        Assert.Equal(0u, lastCwnd);
+    }
+
+    private class FakePerConnectionStats : IPerConnectionStats
+    {
+        private readonly Action<TcpConnectionInfo, uint> _onSet;
+        public FakePerConnectionStats(Action<TcpConnectionInfo, uint> onSet) => _onSet = onSet;
+        public (ulong bytesOut, ulong bytesIn) GetConnectionByteStats(TcpConnectionInfo conn) => (0, 0);
+        public void SetConnectionCwndLimit(TcpConnectionInfo conn, uint limCwnd) => _onSet(conn, limCwnd);
     }
 }
