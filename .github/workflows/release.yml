@@ -25,12 +25,14 @@ jobs:
 
       - name: Publish application
         run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
           dotnet publish IntLimiter/IntLimiter.csproj `
             --configuration Release `
             --runtime win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:Version=$version `
             --output publish
 
       - name: Install Inno Setup
