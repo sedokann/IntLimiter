@@ -39,6 +39,20 @@ IntLimiter.Tests/                  xUnit test project (net8.0, cross-platform)
 - .NET 8 Runtime ([download](https://dotnet.microsoft.com/download/dotnet/8.0))
 - **Administrator privileges** are required for bandwidth limiting (WFP sublayer registration)
 
+## Releases
+
+### Development builds (`dev-latest`)
+
+Every push to any branch and every pull request triggers the [Release workflow](.github/workflows/release.yml).
+The workflow builds the application in Release mode, packages it with Inno Setup, and uploads the installer to the **`dev-latest`** pre-release on the [Releases page](https://github.com/sedokann/IntLimiter/releases/tag/dev-latest).
+The previous asset is automatically removed before the new one is uploaded, so `dev-latest` always contains exactly one installer — the most recent build.
+Each installer file name embeds the run number and short commit SHA (e.g. `IntLimiter-Setup-dev-42-a1b2c3d.exe`) for easy identification.
+
+### Production releases
+
+Push a version tag (e.g. `git tag v1.2.0 && git push origin v1.2.0`) to trigger a full production release.
+The workflow creates a new GitHub Release named after the tag, attaches the versioned installer (e.g. `IntLimiter-Setup-v1.2.0.exe`), and auto-generates release notes from merged pull requests.
+
 ## Building
 
 ```bash

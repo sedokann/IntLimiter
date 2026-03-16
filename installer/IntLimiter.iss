@@ -2,6 +2,9 @@
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.0"
 #endif
+#ifndef MyOutputBaseFilename
+  #define MyOutputBaseFilename "IntLimiter-Setup"
+#endif
 #define MyAppPublisher "sedokann"
 #define MyAppURL "https://github.com/sedokann/IntLimiter"
 #define MyAppExeName "IntLimiter.exe"
@@ -18,7 +21,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 OutputDir=..\output
-OutputBaseFilename=IntLimiter-Setup
+OutputBaseFilename={#MyOutputBaseFilename}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
