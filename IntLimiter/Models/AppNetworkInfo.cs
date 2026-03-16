@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using IntLimiter.Services;
 
 namespace IntLimiter.Models;
 
@@ -12,6 +13,8 @@ public class AppNetworkInfo
     public double SendRateBps { get; set; }
     public double ReceiveRateBps { get; set; }
     public int ConnectionCount { get; set; }
+    /// <summary>Active TCP connections for this process — used by the limiter for CWND throttling.</summary>
+    public IReadOnlyList<TcpConnectionInfo> TcpConnections { get; set; } = System.Array.Empty<TcpConnectionInfo>();
     public Queue<double> SendHistory { get; } = new(60);
     public Queue<double> ReceiveHistory { get; } = new(60);
 }

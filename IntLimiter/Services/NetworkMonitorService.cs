@@ -10,12 +10,22 @@ namespace IntLimiter.Services;
 public class NetworkMonitorService : IDisposable
 {
     private readonly INetworkDataSource _dataSource;
+    private readonly IPerConnectionStats? _perConnStats;
+
+    /// <summary>
+    /// Exposes the optional per-connection stats interface if the underlying data source
+    /// implements it (e.g. <see cref="WindowsNetworkDataSource"/>).
+    /// </summary>
+    public IPerConnectionStats? PerConnectionStats => _perConnStats;
     private Timer? _timer;
     private bool _disposed;
 
-    private readonly Dictionary<int, (long sent, long recv, DateTime time)> _prevPerProcess = new();
+    // Per-connection byte counters: key = (localAddr, localPort, remoteAddr, remotePort)
+    private readonly Dictionary<(uint, ushort, uint, ushort), (ulong sent, ulong recv, DateTime time)> _prevPerConn = new();
+
     private (long inOctets, long outOctets, DateTime time) _prevGlobal;
     private bool _hasPrevGlobal;
+    private DateTime _lastTick = DateTime.UtcNow;
 
     public event Action<IReadOnlyList<AppNetworkInfo>, NetworkStats>? NetworkDataUpdated;
 
@@ -24,6 +34,7 @@ public class NetworkMonitorService : IDisposable
     public NetworkMonitorService(INetworkDataSource dataSource)
     {
         _dataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
+        _perConnStats = dataSource as IPerConnectionStats;
     }
 
     public void Start()
@@ -44,16 +55,55 @@ public class NetworkMonitorService : IDisposable
         try
         {
             var now = DateTime.UtcNow;
+            var elapsed = (now - _lastTick).TotalSeconds;
+            if (elapsed <= 0) elapsed = IntervalMs / 1000.0;
+            _lastTick = now;
+
             var tcpConns = _dataSource.GetTcpConnections();
             var udpConns = _dataSource.GetUdpConnections();
             var ifaceStats = _dataSource.GetNetworkInterfaceStats();
 
             // Aggregate connection counts per PID
-            var pidTcpCount = tcpConns.GroupBy(c => c.OwningPid).ToDictionary(g => g.Key, g => g.Count());
+            var pidTcpConns = tcpConns.GroupBy(c => c.OwningPid).ToDictionary(g => g.Key, g => g.ToList());
             var pidUdpCount = udpConns.GroupBy(c => c.OwningPid).ToDictionary(g => g.Key, g => g.Count());
 
-            var allPids = pidTcpCount.Keys.Union(pidUdpCount.Keys).ToHashSet();
+            var allPids = pidTcpConns.Keys.Union(pidUdpCount.Keys).ToHashSet();
 
+            // ── Per-connection byte deltas (requires admin + Windows TCP eStats API) ──
+            var pidSentDelta = new Dictionary<int, long>();
+            var pidRecvDelta = new Dictionary<int, long>();
+            var activeConnKeys = new HashSet<(uint, ushort, uint, ushort)>();
+
+            if (_perConnStats != null)
+            {
+                foreach (var conn in tcpConns)
+                {
+                    var key = (conn.LocalAddr, conn.LocalPort, conn.RemoteAddr, conn.RemotePort);
+                    activeConnKeys.Add(key);
+
+                    var (bytesOut, bytesIn) = _perConnStats.GetConnectionByteStats(conn);
+
+                    if (_prevPerConn.TryGetValue(key, out var prev))
+                    {
+                        long deltaSent = (long)(bytesOut - prev.sent);
+                        long deltaRecv = (long)(bytesIn  - prev.recv);
+                        // Counters wrap or reset on reconnect — guard against negatives.
+                        if (deltaSent < 0) deltaSent = 0;
+                        if (deltaRecv < 0) deltaRecv = 0;
+
+                        pidSentDelta[conn.OwningPid] = pidSentDelta.GetValueOrDefault(conn.OwningPid) + deltaSent;
+                        pidRecvDelta[conn.OwningPid] = pidRecvDelta.GetValueOrDefault(conn.OwningPid) + deltaRecv;
+                    }
+                    // Always store current reading as baseline for the next tick.
+                    _prevPerConn[key] = (bytesOut, bytesIn, now);
+                }
+
+                // Remove entries for connections that no longer exist.
+                var staleKeys = _prevPerConn.Keys.Except(activeConnKeys).ToList();
+                foreach (var k in staleKeys) _prevPerConn.Remove(k);
+            }
+
+            // ── Build per-app info ──
             var appInfos = new List<AppNetworkInfo>();
 
             foreach (var pid in allPids)
@@ -67,51 +117,46 @@ public class NetworkMonitorService : IDisposable
                 }
                 catch { info.ProcessName = $"PID {pid}"; }
 
-                info.ConnectionCount = (pidTcpCount.GetValueOrDefault(pid)) + (pidUdpCount.GetValueOrDefault(pid));
+                pidTcpConns.TryGetValue(pid, out var connsForPid);
+                info.TcpConnections = connsForPid ?? (IReadOnlyList<TcpConnectionInfo>)Array.Empty<TcpConnectionInfo>();
+                info.ConnectionCount = info.TcpConnections.Count + pidUdpCount.GetValueOrDefault(pid);
 
-                if (_prevPerProcess.TryGetValue(pid, out var prev))
-                {
-                    // Per-process byte counts require ETW/npcap; rates remain 0 without that data.
-                    info.BytesSent = prev.sent;
-                    info.BytesReceived = prev.recv;
-                    info.SendRateBps = 0;
-                    info.ReceiveRateBps = 0;
-                }
+                long sentDelta = pidSentDelta.GetValueOrDefault(pid, 0);
+                long recvDelta = pidRecvDelta.GetValueOrDefault(pid, 0);
 
-                _prevPerProcess[pid] = (info.BytesSent, info.BytesReceived, now);
+                info.BytesSent     += sentDelta;
+                info.BytesReceived += recvDelta;
+                info.SendRateBps    = sentDelta * 8.0 / elapsed;
+                info.ReceiveRateBps = recvDelta * 8.0 / elapsed;
+
                 appInfos.Add(info);
             }
 
-            // Compute global stats from interfaces
-            long totalIn = ifaceStats.Sum(s => s.InOctets);
+            // ── Global stats from interface counters ──
+            long totalIn  = ifaceStats.Sum(s => s.InOctets);
             long totalOut = ifaceStats.Sum(s => s.OutOctets);
             var bestIface = ifaceStats.OrderByDescending(s => s.InOctets + s.OutOctets).FirstOrDefault();
 
             var globalStats = new NetworkStats
             {
-                AdapterName = bestIface?.Name ?? "Unknown",
-                TotalBytesSent = totalOut,
+                AdapterName       = bestIface?.Name ?? "Unknown",
+                TotalBytesSent    = totalOut,
                 TotalBytesReceived = totalIn,
-                Timestamp = now
+                Timestamp         = now
             };
 
             if (_hasPrevGlobal)
             {
-                var elapsed = (now - _prevGlobal.time).TotalSeconds;
-                if (elapsed > 0)
+                var globalElapsed = (now - _prevGlobal.time).TotalSeconds;
+                if (globalElapsed > 0)
                 {
-                    // InterfaceStats carries byte counts (octets); multiply by 8 to convert to bits per second.
-                    globalStats.SendRateBps = Math.Max(0, (totalOut - _prevGlobal.outOctets) * 8.0 / elapsed);
-                    globalStats.ReceiveRateBps = Math.Max(0, (totalIn - _prevGlobal.inOctets) * 8.0 / elapsed);
+                    globalStats.SendRateBps    = Math.Max(0, (totalOut - _prevGlobal.outOctets) * 8.0 / globalElapsed);
+                    globalStats.ReceiveRateBps = Math.Max(0, (totalIn  - _prevGlobal.inOctets)  * 8.0 / globalElapsed);
                 }
             }
 
             _prevGlobal = (totalIn, totalOut, now);
             _hasPrevGlobal = true;
-
-            // Remove stale PIDs
-            var stalePids = _prevPerProcess.Keys.Except(allPids).ToList();
-            foreach (var p in stalePids) _prevPerProcess.Remove(p);
 
             NetworkDataUpdated?.Invoke(appInfos, globalStats);
         }

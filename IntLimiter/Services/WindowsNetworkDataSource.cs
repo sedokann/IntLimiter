@@ -6,7 +6,7 @@ using IntLimiter.Native;
 
 namespace IntLimiter.Services;
 
-public class WindowsNetworkDataSource : INetworkDataSource
+public class WindowsNetworkDataSource : INetworkDataSource, IPerConnectionStats
 {
     public IReadOnlyList<TcpConnectionInfo> GetTcpConnections()
     {
@@ -58,5 +58,36 @@ public class WindowsNetworkDataSource : INetworkDataSource
             Debug.WriteLine($"GetNetworkInterfaceStats error: {ex.Message}");
         }
         return result;
+    }
+
+    // ── IPerConnectionStats ──────────────────────────────────────────────────────
+
+    public (ulong bytesOut, ulong bytesIn) GetConnectionByteStats(TcpConnectionInfo conn)
+    {
+#if WINDOWS7_0_OR_GREATER
+        try
+        {
+            return IpHelperNative.GetTcpConnectionByteStats(conn);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"GetConnectionByteStats error: {ex.Message}");
+        }
+#endif
+        return (0, 0);
+    }
+
+    public void SetConnectionCwndLimit(TcpConnectionInfo conn, uint limCwnd)
+    {
+#if WINDOWS7_0_OR_GREATER
+        try
+        {
+            IpHelperNative.SetTcpConnectionCwndLimit(conn, limCwnd);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"SetConnectionCwndLimit error: {ex.Message}");
+        }
+#endif
     }
 }

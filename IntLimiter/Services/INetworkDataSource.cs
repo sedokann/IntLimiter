@@ -13,3 +13,23 @@ public interface INetworkDataSource
     IReadOnlyList<UdpEndpointInfo> GetUdpConnections();
     IReadOnlyList<InterfaceStats> GetNetworkInterfaceStats();
 }
+
+/// <summary>
+/// Optional interface implemented by <see cref="WindowsNetworkDataSource"/> that
+/// provides per-connection byte-count statistics via the Windows TCP eStats APIs.
+/// When the data source does not implement this interface the monitor falls back to
+/// reporting zero per-process rates (same as before).
+/// </summary>
+public interface IPerConnectionStats
+{
+    /// <summary>
+    /// Returns the cumulative DataBytesOut / DataBytesIn for <paramref name="conn"/>.
+    /// Also enables stats collection on first call for this connection.
+    /// </summary>
+    (ulong bytesOut, ulong bytesIn) GetConnectionByteStats(TcpConnectionInfo conn);
+
+    /// <summary>
+    /// Applies (or clears) a TCP congestion-window limit to throttle a single connection.
+    /// </summary>
+    void SetConnectionCwndLimit(TcpConnectionInfo conn, uint limCwnd);
+}
