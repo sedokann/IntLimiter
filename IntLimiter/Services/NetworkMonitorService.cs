@@ -100,6 +100,7 @@ public class NetworkMonitorService : IDisposable
                 var elapsed = (now - _prevGlobal.time).TotalSeconds;
                 if (elapsed > 0)
                 {
+                    // InterfaceStats carries byte counts (octets); multiply by 8 to convert to bits per second.
                     globalStats.SendRateBps = Math.Max(0, (totalOut - _prevGlobal.outOctets) * 8.0 / elapsed);
                     globalStats.ReceiveRateBps = Math.Max(0, (totalIn - _prevGlobal.inOctets) * 8.0 / elapsed);
                 }

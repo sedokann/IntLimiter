@@ -52,7 +52,7 @@ public class AppNetworkInfoTests
         info.ReceiveHistory.Enqueue(300.0);
 
         Assert.Equal(2, info.SendHistory.Count);
-        Assert.Equal(1, info.ReceiveHistory.Count);
+        Assert.Single(info.ReceiveHistory);
     }
 
     [Fact]
