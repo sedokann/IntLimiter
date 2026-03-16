@@ -2,14 +2,14 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Colors -->
-    <Color x:Key="BackgroundDark">#1C1C1C</Color>
-    <Color x:Key="CardBackgroundDark">#2D2D2D</Color>
+    <Color x:Key="BackgroundDark">#F3F3F3</Color>
+    <Color x:Key="CardBackgroundDark">#FFFFFF</Color>
     <Color x:Key="AccentBlue">#0067C0</Color>
-    <Color x:Key="UploadColor">#60CDFF</Color>
-    <Color x:Key="DownloadColor">#4CAF78</Color>
-    <Color x:Key="TextPrimary">#FFFFFF</Color>
-    <Color x:Key="TextSecondary">#AAAAAA</Color>
-    <Color x:Key="BorderColor">#404040</Color>
+    <Color x:Key="UploadColor">#0067C0</Color>
+    <Color x:Key="DownloadColor">#107C10</Color>
+    <Color x:Key="TextPrimary">#1C1C1C</Color>
+    <Color x:Key="TextSecondary">#555555</Color>
+    <Color x:Key="BorderColor">#E0E0E0</Color>
 
     <!-- Brushes -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundDark}" />
@@ -22,17 +22,17 @@
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
 
     <!-- Additional theme brushes -->
-    <SolidColorBrush x:Key="TabBarBackgroundBrush" Color="#252525" />
-    <SolidColorBrush x:Key="TabBarBorderBrush" Color="#333333" />
-    <SolidColorBrush x:Key="WindowBorderBrush" Color="#404040" />
-    <SolidColorBrush x:Key="AppItemBorderBrush" Color="#333333" />
-    <SolidColorBrush x:Key="SecondaryButtonBgBrush" Color="#404040" />
-    <SolidColorBrush x:Key="SecondaryButtonHoverBrush" Color="#505050" />
-    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#383838" />
-    <SolidColorBrush x:Key="ListViewHoverBrush" Color="#33FFFFFF" />
-    <SolidColorBrush x:Key="ListViewSelectedBrush" Color="#440067C0" />
-    <SolidColorBrush x:Key="TitleBarButtonHoverBrush" Color="#33FFFFFF" />
-    <SolidColorBrush x:Key="ToggleTrackBrush" Color="#404040" />
+    <SolidColorBrush x:Key="TabBarBackgroundBrush" Color="#EBEBEB" />
+    <SolidColorBrush x:Key="TabBarBorderBrush" Color="#DDDDDD" />
+    <SolidColorBrush x:Key="WindowBorderBrush" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="AppItemBorderBrush" Color="#EEEEEE" />
+    <SolidColorBrush x:Key="SecondaryButtonBgBrush" Color="#E0E0E0" />
+    <SolidColorBrush x:Key="SecondaryButtonHoverBrush" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#F8F8F8" />
+    <SolidColorBrush x:Key="ListViewHoverBrush" Color="#15000000" />
+    <SolidColorBrush x:Key="ListViewSelectedBrush" Color="#220067C0" />
+    <SolidColorBrush x:Key="TitleBarButtonHoverBrush" Color="#15000000" />
+    <SolidColorBrush x:Key="ToggleTrackBrush" Color="#CCCCCC" />
 
     <!-- Card Style -->
     <Style x:Key="CardStyle" TargetType="Border">
@@ -68,7 +68,7 @@
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="#33FFFFFF" />
+                            <Setter TargetName="Border" Property="Background" Value="{StaticResource TitleBarButtonHoverBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

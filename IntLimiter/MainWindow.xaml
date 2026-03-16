@@ -8,8 +8,8 @@
         xmlns:ctrl="clr-namespace:IntLimiter.Controls"
         mc:Ignorable="d"
         Title="IntLimiter - Network Monitor"
-        Height="700" Width="1000"
-        MinHeight="500" MinWidth="700"
+        Height="700" Width="1050"
+        MinHeight="500" MinWidth="750"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent">
@@ -19,8 +19,8 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVisConverter" />
     </Window.Resources>
 
-    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="12"
-            BorderBrush="#404040" BorderThickness="1">
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="12"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.5" ShadowDepth="0" />
         </Border.Effect>
@@ -39,19 +39,19 @@
                         <TextBlock Text="&#x1F310;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" />
                         <TextBlock Text="IntLimiter" FontFamily="Segoe UI Variable Display, Segoe UI"
                                    FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,8,0">
                         <Button x:Name="MinimizeButton" Content="&#x2500;" Width="46" Height="40"
                                 Background="Transparent" BorderThickness="0"
-                                Foreground="{StaticResource TextPrimaryBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
                                 FontSize="12"
                                 Click="MinimizeButton_Click">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                                     <Setter Property="BorderThickness" Value="0" />
                                     <Setter Property="Template">
                                         <Setter.Value>
@@ -61,7 +61,7 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Bg" Property="Background" Value="#33FFFFFF" />
+                                                        <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TitleBarButtonHoverBrush}" />
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -72,13 +72,13 @@
                         </Button>
                         <Button x:Name="CloseButton" Content="&#x2715;" Width="46" Height="40"
                                 Background="Transparent" BorderThickness="0"
-                                Foreground="{StaticResource TextPrimaryBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
                                 FontSize="12"
                                 Click="CloseButton_Click">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                                     <Setter Property="BorderThickness" Value="0" />
                                     <Setter Property="Template">
                                         <Setter.Value>
@@ -102,16 +102,17 @@
             </Border>
 
             <!-- Tab Bar -->
-            <Border Grid.Row="1" Background="#252525" BorderBrush="#333333" BorderThickness="0,1,0,1">
+            <Border Grid.Row="1" Background="{DynamicResource TabBarBackgroundBrush}"
+                    BorderBrush="{DynamicResource TabBarBorderBrush}" BorderThickness="0,1,0,1">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                    <RadioButton Content="Monitor" Style="{StaticResource TabButtonStyle}"
+                    <RadioButton Content="Monitor" Style="{DynamicResource TabButtonStyle}"
                                  IsChecked="True"
                                  GroupName="Tabs"
                                  Checked="MonitorTab_Checked" />
-                    <RadioButton Content="Limiter" Style="{StaticResource TabButtonStyle}"
+                    <RadioButton Content="Limiter" Style="{DynamicResource TabButtonStyle}"
                                  GroupName="Tabs"
                                  Checked="LimiterTab_Checked" />
-                    <RadioButton Content="Settings" Style="{StaticResource TabButtonStyle}"
+                    <RadioButton Content="Settings" Style="{DynamicResource TabButtonStyle}"
                                  GroupName="Tabs"
                                  Checked="SettingsTab_Checked" />
                 </StackPanel>
@@ -119,11 +120,11 @@
 
             <!-- Content Area -->
             <Grid Grid.Row="2">
-                <!-- Monitor Tab -->
+                <!-- ======================== Monitor Tab ======================== -->
                 <ScrollViewer x:Name="MonitorPanel" VerticalScrollBarVisibility="Auto" Padding="16">
                     <StackPanel>
                         <!-- Global Stats Card -->
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{DynamicResource CardStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -131,171 +132,145 @@
                                     <ColumnDefinition Width="2*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="&#x2191; UPLOAD" Style="{StaticResource CaptionStyle}"
-                                               Foreground="{StaticResource UploadBrush}" />
-                                    <TextBlock Text="{Binding GlobalSendRate}" Style="{StaticResource StatLargeStyle}"
-                                               Foreground="{StaticResource UploadBrush}" Margin="0,4,0,0" />
+                                    <TextBlock Text="&#x2191; UPLOAD" Style="{DynamicResource CaptionStyle}"
+                                               Foreground="{DynamicResource UploadBrush}" />
+                                    <TextBlock Text="{Binding GlobalSendRate}" Style="{DynamicResource StatLargeStyle}"
+                                               Foreground="{DynamicResource UploadBrush}" Margin="0,4,0,0" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="&#x2193; DOWNLOAD" Style="{StaticResource CaptionStyle}"
-                                               Foreground="{StaticResource DownloadBrush}" />
-                                    <TextBlock Text="{Binding GlobalReceiveRate}" Style="{StaticResource StatLargeStyle}"
-                                               Foreground="{StaticResource DownloadBrush}" Margin="0,4,0,0" />
+                                    <TextBlock Text="&#x2193; DOWNLOAD" Style="{DynamicResource CaptionStyle}"
+                                               Foreground="{DynamicResource DownloadBrush}" />
+                                    <TextBlock Text="{Binding GlobalReceiveRate}" Style="{DynamicResource StatLargeStyle}"
+                                               Foreground="{DynamicResource DownloadBrush}" Margin="0,4,0,0" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="{Binding AdapterName}" Style="{StaticResource CaptionStyle}" />
+                                    <TextBlock Text="{Binding AdapterName}" Style="{DynamicResource CaptionStyle}" />
                                     <ctrl:SparklineControl Height="40" Values="{Binding GlobalReceiveHistory}"
                                                            LineColor="#4CAF78" LineThickness="2" Margin="0,4,0,0" />
                                 </StackPanel>
                             </Grid>
                         </Border>
 
-                        <!-- Apps Header -->
-                        <TextBlock Text="Active Network Applications" Style="{StaticResource SubtitleStyle}" Margin="0,0,0,8" />
-
-                        <!-- Apps List -->
-                        <Border Style="{StaticResource CardStyle}" Padding="0">
-                            <ListView x:Name="AppsListView"
-                                      ItemsSource="{Binding Apps}"
-                                      Style="{StaticResource ModernListViewStyle}"
-                                      ItemContainerStyle="{StaticResource ModernListViewItemStyle}"
-                                      MaxHeight="380">
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn Header="Process" Width="180">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding ProcessName}"
-                                                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                                                   FontSize="12" />
-                                                        <TextBlock Text="{Binding ProcessId, StringFormat='PID {0}'}"
-                                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                                   FontSize="10" />
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Upload" Width="120">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding SendRateBps, Converter={StaticResource BpsConverter}}"
-                                                               Foreground="{StaticResource UploadBrush}" FontSize="12" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Download" Width="120">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding ReceiveRateBps, Converter={StaticResource BpsConverter}}"
-                                                               Foreground="{StaticResource DownloadBrush}" FontSize="12" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Connections" Width="90">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding ConnectionCount}"
-                                                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Activity" Width="120">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ctrl:SparklineControl Height="28" Width="110"
-                                                                           Values="{Binding ReceiveHistory}"
-                                                                           LineColor="#4CAF78" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- Limiter Tab -->
-                <ScrollViewer x:Name="LimiterPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="16">
-                    <StackPanel>
-                        <!-- Global Limits Card -->
-                        <Border Style="{StaticResource CardStyle}">
+                        <!-- Quick Global Limit Card -->
+                        <Border Style="{DynamicResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="Global Bandwidth Limits" Style="{StaticResource SubtitleStyle}" Margin="0,0,0,12" />
+                                <TextBlock Text="Global Bandwidth Limit" Style="{DynamicResource SubtitleStyle}" Margin="0,0,0,10" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                        <TextBlock Text="Max Upload (Mbps)" Style="{StaticResource CaptionStyle}" Margin="0,0,0,4" />
-                                        <Slider Style="{StaticResource ModernSliderStyle}"
-                                                Minimum="0" Maximum="1000"
-                                                Value="{Binding GlobalMaxUploadMbps}"
-                                                TickFrequency="100" IsSnapToTickEnabled="False" />
-                                        <TextBlock Text="{Binding GlobalMaxUploadMbps, StringFormat='{}{0:F0} Mbps'}"
-                                                   Foreground="{StaticResource UploadBrush}" FontSize="12" Margin="0,4,0,0" />
+                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <TextBlock Text="Max Upload (Mbps)" Style="{DynamicResource CaptionStyle}" Margin="0,0,0,4" />
+                                        <TextBox Text="{Binding GlobalMaxUploadMbps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{DynamicResource ModernTextBoxStyle}" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="Max Download (Mbps)" Style="{StaticResource CaptionStyle}" Margin="0,0,0,4" />
-                                        <Slider Style="{StaticResource ModernSliderStyle}"
-                                                Minimum="0" Maximum="1000"
-                                                Value="{Binding GlobalMaxDownloadMbps}"
-                                                TickFrequency="100" IsSnapToTickEnabled="False" />
-                                        <TextBlock Text="{Binding GlobalMaxDownloadMbps, StringFormat='{}{0:F0} Mbps'}"
-                                                   Foreground="{StaticResource DownloadBrush}" FontSize="12" Margin="0,4,0,0" />
+                                    <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                        <TextBlock Text="Max Download (Mbps)" Style="{DynamicResource CaptionStyle}" Margin="0,0,0,4" />
+                                        <TextBox Text="{Binding GlobalMaxDownloadMbps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{DynamicResource ModernTextBoxStyle}" />
                                     </StackPanel>
+                                    <Button Grid.Column="2" Content="Apply" Style="{DynamicResource PrimaryButtonStyle}"
+                                            Command="{Binding ApplyGlobalLimitCommand}"
+                                            VerticalAlignment="Bottom" Margin="0,0,8,0" />
+                                    <Button Grid.Column="3" Content="Remove" Style="{DynamicResource SecondaryButtonStyle}"
+                                            Command="{Binding RemoveGlobalLimitCommand}"
+                                            Visibility="{Binding HasGlobalLimit, Converter={StaticResource BoolToVisConverter}}"
+                                            VerticalAlignment="Bottom" />
                                 </Grid>
-                                <Button Content="Apply Global Limit" Style="{StaticResource PrimaryButtonStyle}"
-                                        Command="{Binding ApplyGlobalLimitCommand}"
-                                        HorizontalAlignment="Left" Margin="0,12,0,0" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Per-App Limits -->
-                        <TextBlock Text="Per-Application Limits" Style="{StaticResource SubtitleStyle}" Margin="0,0,0,8" />
-                        <Border Style="{StaticResource CardStyle}" Padding="0">
+                        <!-- Running Apps Header -->
+                        <TextBlock Text="Active Applications" Style="{DynamicResource SubtitleStyle}" Margin="0,0,0,8" />
+
+                        <!-- Apps List with inline limit controls -->
+                        <Border Style="{DynamicResource CardStyle}" Padding="0">
                             <ItemsControl ItemsSource="{Binding Apps}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Padding="12,8" BorderBrush="#333333" BorderThickness="0,0,0,1">
+                                        <Border Padding="12,8"
+                                                BorderBrush="{DynamicResource AppItemBorderBrush}"
+                                                BorderThickness="0,0,0,1">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="160" />
-                                                    <ColumnDefinition Width="140" />
-                                                    <ColumnDefinition Width="140" />
+                                                    <ColumnDefinition Width="150" />
+                                                    <ColumnDefinition Width="90" />
+                                                    <ColumnDefinition Width="90" />
+                                                    <ColumnDefinition Width="55" />
                                                     <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="110" />
+                                                    <ColumnDefinition Width="110" />
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
+
+                                                <!-- App Name + PID -->
                                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding ProcessName}"
-                                                               Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" />
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                                               FontSize="12" FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis" />
                                                     <TextBlock Text="{Binding ProcessId, StringFormat='PID {0}'}"
-                                                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="10" />
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               FontSize="10" />
                                                 </StackPanel>
-                                                <StackPanel Grid.Column="1" Margin="8,0">
-                                                    <TextBlock Text="Upload limit (bps)" Style="{StaticResource CaptionStyle}" />
-                                                    <TextBox Text="{Binding MaxUploadBps, StringFormat='{}{0:F0}'}"
-                                                             Style="{StaticResource ModernTextBoxStyle}" Width="120" HorizontalAlignment="Left" />
+
+                                                <!-- Upload Rate -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="&#x2191; Upload" Style="{DynamicResource CaptionStyle}"
+                                                               Foreground="{DynamicResource UploadBrush}" />
+                                                    <TextBlock Text="{Binding SendRateBps, Converter={StaticResource BpsConverter}}"
+                                                               Foreground="{DynamicResource UploadBrush}" FontSize="12" />
                                                 </StackPanel>
-                                                <StackPanel Grid.Column="2" Margin="8,0">
-                                                    <TextBlock Text="Download limit (bps)" Style="{StaticResource CaptionStyle}" />
-                                                    <TextBox Text="{Binding MaxDownloadBps, StringFormat='{}{0:F0}'}"
-                                                             Style="{StaticResource ModernTextBoxStyle}" Width="120" HorizontalAlignment="Left" />
+
+                                                <!-- Download Rate -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                    <TextBlock Text="&#x2193; Download" Style="{DynamicResource CaptionStyle}"
+                                                               Foreground="{DynamicResource DownloadBrush}" />
+                                                    <TextBlock Text="{Binding ReceiveRateBps, Converter={StaticResource BpsConverter}}"
+                                                               Foreground="{DynamicResource DownloadBrush}" FontSize="12" />
                                                 </StackPanel>
-                                                <CheckBox Grid.Column="3" Content="Enabled"
-                                                          Style="{StaticResource ToggleSwitchStyle}"
-                                                          IsChecked="{Binding IsLimitEnabled}"
-                                                          VerticalAlignment="Center" />
-                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                    <Button Content="Apply" Style="{StaticResource PrimaryButtonStyle}"
+
+                                                <!-- Connections -->
+                                                <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                                    <TextBlock Text="Conn" Style="{DynamicResource CaptionStyle}" />
+                                                    <TextBlock Text="{Binding ConnectionCount}"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" />
+                                                </StackPanel>
+
+                                                <!-- Activity sparkline -->
+                                                <ctrl:SparklineControl Grid.Column="4" Height="30" Width="90"
+                                                                       Values="{Binding ReceiveHistory}"
+                                                                       LineColor="#4CAF78"
+                                                                       VerticalAlignment="Center" />
+
+                                                <!-- Upload Limit Input -->
+                                                <StackPanel Grid.Column="5" Margin="6,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="Up limit (bps)" Style="{DynamicResource CaptionStyle}" />
+                                                    <TextBox Text="{Binding MaxUploadBps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{DynamicResource ModernTextBoxStyle}" />
+                                                </StackPanel>
+
+                                                <!-- Download Limit Input -->
+                                                <StackPanel Grid.Column="6" Margin="6,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="Down limit (bps)" Style="{DynamicResource CaptionStyle}" />
+                                                    <TextBox Text="{Binding MaxDownloadBps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{DynamicResource ModernTextBoxStyle}" />
+                                                </StackPanel>
+
+                                                <!-- Limit / Remove buttons -->
+                                                <StackPanel Grid.Column="7" Orientation="Horizontal"
+                                                            VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                    <Button Content="Limit" Style="{DynamicResource PrimaryButtonStyle}"
                                                             Command="{Binding DataContext.ApplyAppLimitCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
-                                                            Margin="0,0,8,0" />
-                                                    <Button Content="Remove" Style="{StaticResource SecondaryButtonStyle}"
+                                                            Margin="0,0,6,0" />
+                                                    <Button Content="Remove" Style="{DynamicResource SecondaryButtonStyle}"
                                                             Command="{Binding DataContext.RemoveAppLimitCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}" />
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding IsLimitEnabled, Converter={StaticResource BoolToVisConverter}}" />
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
@@ -306,34 +281,173 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- Settings Tab -->
+                <!-- ======================== Limiter Tab ======================== -->
+                <ScrollViewer x:Name="LimiterPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <!-- Global Limits Card -->
+                        <Border Style="{DynamicResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Global Bandwidth Limits" Style="{DynamicResource SubtitleStyle}" Margin="0,0,0,12" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Upload limit column -->
+                                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                        <TextBlock Text="Max Upload (Mbps)" Style="{DynamicResource CaptionStyle}" Margin="0,0,0,4" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="80" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding GlobalMaxUploadMbps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{DynamicResource ModernTextBoxStyle}" Margin="0,0,8,0" />
+                                            <Slider Grid.Column="1" Style="{DynamicResource ModernSliderStyle}"
+                                                    Minimum="0" Maximum="1000"
+                                                    Value="{Binding GlobalMaxUploadMbps}"
+                                                    VerticalAlignment="Center" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding GlobalMaxUploadMbps, StringFormat='{}{0:F0} Mbps'}"
+                                                   Foreground="{DynamicResource UploadBrush}" FontSize="12" Margin="0,4,0,0" />
+                                    </StackPanel>
+
+                                    <!-- Download limit column -->
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Max Download (Mbps)" Style="{DynamicResource CaptionStyle}" Margin="0,0,0,4" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="80" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding GlobalMaxDownloadMbps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{DynamicResource ModernTextBoxStyle}" Margin="0,0,8,0" />
+                                            <Slider Grid.Column="1" Style="{DynamicResource ModernSliderStyle}"
+                                                    Minimum="0" Maximum="1000"
+                                                    Value="{Binding GlobalMaxDownloadMbps}"
+                                                    VerticalAlignment="Center" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding GlobalMaxDownloadMbps, StringFormat='{}{0:F0} Mbps'}"
+                                                   Foreground="{DynamicResource DownloadBrush}" FontSize="12" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <Button Content="Apply Global Limit" Style="{DynamicResource PrimaryButtonStyle}"
+                                            Command="{Binding ApplyGlobalLimitCommand}"
+                                            Margin="0,0,8,0" />
+                                    <Button Content="Remove Global Limit" Style="{DynamicResource SecondaryButtonStyle}"
+                                            Command="{Binding RemoveGlobalLimitCommand}"
+                                            Visibility="{Binding HasGlobalLimit, Converter={StaticResource BoolToVisConverter}}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Active App Limits Section -->
+                        <TextBlock Text="Active Application Limits" Style="{DynamicResource SubtitleStyle}" Margin="0,0,0,8" />
+                        <Border Style="{DynamicResource CardStyle}" Padding="0">
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding LimitedApps}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="12,8"
+                                                    BorderBrush="{DynamicResource AppItemBorderBrush}"
+                                                    BorderThickness="0,0,0,1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="160" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="90" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding ProcessName}"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding ProcessId, StringFormat='PID {0}'}"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Margin="8,0">
+                                                        <TextBlock Text="Upload limit (bps)" Style="{DynamicResource CaptionStyle}" />
+                                                        <TextBox Text="{Binding MaxUploadBps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                                 Style="{DynamicResource ModernTextBoxStyle}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Margin="8,0">
+                                                        <TextBlock Text="Download limit (bps)" Style="{DynamicResource CaptionStyle}" />
+                                                        <TextBox Text="{Binding MaxDownloadBps, StringFormat='{}{0:F0}', UpdateSourceTrigger=PropertyChanged}"
+                                                                 Style="{DynamicResource ModernTextBoxStyle}" />
+                                                    </StackPanel>
+                                                    <CheckBox Grid.Column="3" Content="Enabled"
+                                                              Style="{DynamicResource ToggleSwitchStyle}"
+                                                              IsChecked="{Binding IsLimitEnabled}"
+                                                              VerticalAlignment="Center" />
+                                                    <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                                                VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                        <Button Content="Update" Style="{DynamicResource PrimaryButtonStyle}"
+                                                                Command="{Binding DataContext.ApplyAppLimitCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                Margin="0,0,8,0" />
+                                                        <Button Content="Remove" Style="{DynamicResource SecondaryButtonStyle}"
+                                                                Command="{Binding DataContext.RemoveAppLimitCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <!-- Empty state -->
+                                <TextBlock Text="No application limits set. Use the Monitor tab to limit specific apps."
+                                           Style="{DynamicResource CaptionStyle}"
+                                           Margin="16,12"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding HasNoLimitedApps, Converter={StaticResource BoolToVisConverter}}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ======================== Settings Tab ======================== -->
                 <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="16">
                     <StackPanel>
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{DynamicResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="General Settings" Style="{StaticResource SubtitleStyle}" Margin="0,0,0,16" />
+                                <TextBlock Text="General Settings" Style="{DynamicResource SubtitleStyle}" Margin="0,0,0,16" />
                                 <StackPanel Margin="0,0,0,16">
-                                    <TextBlock Text="Refresh Interval (ms)" Style="{StaticResource CaptionStyle}" Margin="0,0,0,4" />
-                                    <Slider Minimum="250" Maximum="5000"
-                                            Value="{Binding RefreshIntervalMs}"
-                                            TickFrequency="250" IsSnapToTickEnabled="True"
-                                            Width="300" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Refresh Interval (ms)" Style="{DynamicResource CaptionStyle}" Margin="0,0,0,4" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="220" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding RefreshIntervalMs, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{DynamicResource ModernTextBoxStyle}" Margin="0,0,8,0" />
+                                        <Slider Grid.Column="1" Minimum="250" Maximum="5000"
+                                                Value="{Binding RefreshIntervalMs}"
+                                                TickFrequency="250" IsSnapToTickEnabled="True"
+                                                VerticalAlignment="Center" />
+                                    </Grid>
                                     <TextBlock Text="{Binding RefreshIntervalMs, StringFormat='{}{0} ms'}"
-                                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
-                                    <CheckBox Content="Dark Theme" Style="{StaticResource ToggleSwitchStyle}"
+                                    <CheckBox Content="Dark Theme" Style="{DynamicResource ToggleSwitchStyle}"
                                               IsChecked="{Binding IsDarkTheme}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Style="{DynamicResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="About IntLimiter" Style="{StaticResource SubtitleStyle}" Margin="0,0,0,8" />
+                                <TextBlock Text="About IntLimiter" Style="{DynamicResource SubtitleStyle}" Margin="0,0,0,8" />
                                 <TextBlock Text="Windows 11-style network activity monitor and bandwidth limiter."
-                                           Style="{StaticResource CaptionStyle}" TextWrapping="Wrap" />
+                                           Style="{DynamicResource CaptionStyle}" TextWrapping="Wrap" />
                                 <TextBlock Text="Requires administrator privileges for bandwidth limiting (WFP)."
-                                           Style="{StaticResource CaptionStyle}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                           Style="{DynamicResource CaptionStyle}" TextWrapping="Wrap" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
