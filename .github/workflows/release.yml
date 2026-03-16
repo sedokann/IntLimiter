@@ -2,10 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
-  release:
-    types: [published]
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,27 +21,77 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Publish application
+      - name: Compute build metadata
+        id: meta
+        shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
+          $ref = "${{ github.ref }}"
+          if ($ref -match '^refs/tags/v(\d+\.\d+\.\d+.*)$') {
+            $version  = $Matches[1]
+            $isRelease = "true"
+            $baseName  = "IntLimiter-Setup-v$version"
+          } else {
+            $version  = "0.0.0"
+            $isRelease = "false"
+            $shortSha  = "${{ github.sha }}".Substring(0, 7)
+            $baseName  = "IntLimiter-Setup-dev-${{ github.run_number }}-$shortSha"
+          }
+          "VERSION=$version"    | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "IS_RELEASE=$isRelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "BASE_NAME=$baseName"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Publish application
+        shell: pwsh
+        run: |
           dotnet publish IntLimiter/IntLimiter.csproj `
             --configuration Release `
             --runtime win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:Version=$version `
+            -p:Version=${{ steps.meta.outputs.VERSION }} `
             --output publish
 
       - name: Install Inno Setup
         run: choco install innosetup --yes
 
-      - name: Build installer with Inno Setup
+      - name: Build installer
+        shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$version installer/IntLimiter.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=${{ steps.meta.outputs.VERSION }}" `
+            "/DMyOutputBaseFilename=${{ steps.meta.outputs.BASE_NAME }}" `
+            installer/IntLimiter.iss
 
-      - name: Upload installer to release
+      # Push / PR / workflow_dispatch: update the rolling dev-latest release.
+      # Skipped for PRs from forks because GITHUB_TOKEN lacks write permission there.
+      - name: Upload installer to dev-latest release
+        if: >-
+          steps.meta.outputs.IS_RELEASE == 'false' &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        uses: ncipollo/release-action@v1
+        with:
+          tag: dev-latest
+          name: "Development Build (latest)"
+          prerelease: true
+          allowUpdates: true
+          removeArtifacts: true
+          artifacts: "output/${{ steps.meta.outputs.BASE_NAME }}.exe"
+          body: |
+            Latest development installer — updated automatically on every push and every pull request from this repository.
+
+            | Field  | Value |
+            |--------|-------|
+            | Run    | #${{ github.run_number }} |
+            | Commit | `${{ github.sha }}` |
+            | Ref    | `${{ github.ref }}` |
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Version tag push (v*): create a proper versioned production release.
+      - name: Upload installer to versioned release
+        if: steps.meta.outputs.IS_RELEASE == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: output/IntLimiter-Setup.exe
+          files: "output/${{ steps.meta.outputs.BASE_NAME }}.exe"
+          generate_release_notes: true
