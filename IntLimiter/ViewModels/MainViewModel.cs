@@ -20,6 +20,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AppNetworkViewModel> Apps { get; } = new();
 
+    public IEnumerable<AppNetworkViewModel> LimitedApps => Apps.Where(a => a.IsLimitEnabled);
+
+    public bool HasNoLimitedApps => !Apps.Any(a => a.IsLimitEnabled);
+
     [ObservableProperty]
     private string _globalSendRate = "0 bps";
 
@@ -44,6 +48,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isDarkTheme = true;
 
+    [ObservableProperty]
+    private bool _hasGlobalLimit;
+
     private readonly Queue<double> _globalSendHistory = new(60);
     private readonly Queue<double> _globalReceiveHistory = new(60);
 
@@ -57,6 +64,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher = dispatcher;
         _monitorService.NetworkDataUpdated += OnNetworkDataUpdated;
         _monitorService.Start();
+    }
+
+    partial void OnIsDarkThemeChanged(bool value)
+    {
+        App.SwitchTheme(value);
     }
 
     private void OnNetworkDataUpdated(IReadOnlyList<AppNetworkInfo> apps, NetworkStats global)
@@ -102,13 +114,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 Apps.Add(new AppNetworkViewModel(info));
         }
 
-        // Sort by total rate descending
-        var sorted = Apps.OrderByDescending(a => a.SendRateBps + a.ReceiveRateBps).ToList();
+        // Sort by connection count then total rate descending
+        var sorted = Apps.OrderByDescending(a => a.ConnectionCount)
+                         .ThenByDescending(a => a.SendRateBps + a.ReceiveRateBps)
+                         .ToList();
         for (int i = 0; i < sorted.Count; i++)
         {
             int current = Apps.IndexOf(sorted[i]);
             if (current != i) Apps.Move(current, i);
         }
+
+        OnPropertyChanged(nameof(LimitedApps));
+        OnPropertyChanged(nameof(HasNoLimitedApps));
     }
 
     [RelayCommand]
@@ -117,20 +134,36 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _limiterService.SetGlobalLimit(
             GlobalMaxUploadMbps * MbpsToBps,
             GlobalMaxDownloadMbps * MbpsToBps);
+        HasGlobalLimit = GlobalMaxUploadMbps > 0 || GlobalMaxDownloadMbps > 0;
+    }
+
+    [RelayCommand]
+    private void RemoveGlobalLimit()
+    {
+        GlobalMaxUploadMbps = 0;
+        GlobalMaxDownloadMbps = 0;
+        _limiterService.SetGlobalLimit(0, 0);
+        HasGlobalLimit = false;
     }
 
     [RelayCommand]
     private void ApplyAppLimit(AppNetworkViewModel? vm)
     {
         if (vm == null) return;
+        vm.IsLimitEnabled = true;
         _limiterService.SetLimit(vm.ProcessId, vm.ExePath, vm.MaxUploadBps, vm.MaxDownloadBps);
+        OnPropertyChanged(nameof(LimitedApps));
+        OnPropertyChanged(nameof(HasNoLimitedApps));
     }
 
     [RelayCommand]
     private void RemoveAppLimit(AppNetworkViewModel? vm)
     {
         if (vm == null) return;
+        vm.IsLimitEnabled = false;
         _limiterService.RemoveLimit(vm.ProcessId);
+        OnPropertyChanged(nameof(LimitedApps));
+        OnPropertyChanged(nameof(HasNoLimitedApps));
     }
 
     private static string FormatBps(double bps)
